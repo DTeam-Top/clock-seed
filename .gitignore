@@ -1,0 +1,10 @@
+Thumbs.db
+build/
+out/
+*.iml
+*.ipr
+*.iws
+*.log
+.*
+!.gitignore
+bin/

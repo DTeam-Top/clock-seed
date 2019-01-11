@@ -1,0 +1,50 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+if (!JavaVersion.current().java8Compatible) {
+    throw new IllegalStateException('''Please install Java 8!'''.stripMargin())
+}
+
+sourceSets.main.java.srcDirs = []
+sourceSets.main.groovy.srcDirs += ["src/main/java"]
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.codehaus.groovy:groovy:${GROOVY_VER}"
+    compile "io.vertx:vertx-core:${VERTX_VER}"
+    compile "io.reactiverse:reactive-pg-client:${PG_VER}"
+    compile "ch.qos.logback:logback-classic:${LOGBACK_VER}"
+    testCompile "org.spockframework:spock-core:${SPOCK_VER}"
+    testRuntime 'cglib:cglib-nodep:3.2.8'
+    testRuntime 'org.objenesis:objenesis:3.0'
+}
+
+version = '0.0.1'
+
+shadowJar {
+    classifier = 'fat'
+    baseName = 'clock'
+    manifest {
+        attributes 'Main-Class': 'top.dteam.earth.clock.Launcher'
+        attributes 'Main-Verticle': 'top.dteam.earth.clock.MainVerticle'
+    }
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+}
