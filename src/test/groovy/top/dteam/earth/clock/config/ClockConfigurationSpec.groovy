@@ -20,6 +20,7 @@ class ClockConfigurationSpec extends Specification {
             retry = 4
             delay = 600
             limit = 200
+            timeout = 8
             callbackRoot = 'http://localhost:8081'
             topics {
                 topic1 {
@@ -47,6 +48,7 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.retry == 4
         clockConfiguration.delay == 600
         clockConfiguration.limit == 200
+        clockConfiguration.timeout == 8
         clockConfiguration.callbackRoot == 'http://localhost:8081'
         clockConfiguration.topics == [topic1: [key1: 1000], topic2: [key2: 'string']]
     }
@@ -62,7 +64,7 @@ class ClockConfigurationSpec extends Specification {
         thrown(InvalidConfiguriationException)
     }
 
-    def "配置项的默认值测试：delay(500)，retry(3)，limit(100)，callbackRoot(http://localhost:8080)"() {
+    def "配置项的默认值测试：delay(500)，retry(3)，limit(100)，timeout(4)，callbackRoot(http://localhost:8080)"() {
         setup:
         String config = """
             pgPool {
@@ -83,6 +85,7 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.delay == 500
         clockConfiguration.retry == 3
         clockConfiguration.limit == 100
+        clockConfiguration.timeout == 4
         clockConfiguration.callbackRoot == 'http://localhost:8080'
     }
 
@@ -149,7 +152,7 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.delayByTopic('topic1') == 600
     }
 
-    def "应该能够找出最小的topic delay值：没有topic且没有配置delay，则为缺省值"(){
+    def "应该能够找出最小的topic delay值：没有topic且没有配置delay，则为缺省值"() {
         setup:
         String config = """
             pgPool {
@@ -170,7 +173,7 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.minDelayByTopic() == clockConfiguration.delay
     }
 
-    def "应该能够找出最小的topic delay值：没有topic，有delay，则为配置值"(){
+    def "应该能够找出最小的topic delay值：没有topic，有delay，则为配置值"() {
         setup:
         String config = """
             pgPool {
@@ -192,7 +195,7 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.minDelayByTopic() == clockConfiguration.delay
     }
 
-    def "应该能够找出最小的topic delay值：全配置"(){
+    def "应该能够找出最小的topic delay值：全配置"() {
         setup:
         String config = """
             pgPool {

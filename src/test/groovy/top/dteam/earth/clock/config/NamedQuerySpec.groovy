@@ -101,7 +101,9 @@ class NamedQuerySpec extends Specification {
                 pgPool.preparedBatch(''' insert into myjob 
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
-                        Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 1, LocalDateTime.now().minusMinutes(10), LocalDateTime.now())
+                        Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 1, LocalDateTime.now().minusHours(5), LocalDateTime.now())
+                        , Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 3, LocalDateTime.now().minusHours(5), LocalDateTime.now())
+                        , Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 0, LocalDateTime.now(), LocalDateTime.now())
                         , Tuple.of('CALLBACK', 10, Json.create(new JsonObject()), 'SUCCEEDED', 0, LocalDateTime.now(), LocalDateTime.now())
                 ]) { ar -> println ar.cause() }
             }
@@ -110,17 +112,29 @@ class NamedQuerySpec extends Specification {
         when:
         sleep(100)
         BlockingVariable<List<Row>> rows = new BlockingVariable<>()
-        pgUtils.simpleSql(NamedQuery.resetUnfinishedJob()) {
+        pgUtils.simpleSql(NamedQuery.resetUnfinishedJob(4)) {
             pgUtils.simpleSql('select * from myjob order by id') { rowSet ->
                 rows.set(rowSet.asList())
             }
         }
 
         then:
+        // 满足条件
         rows.get()[0].getString('topic') == 'SMS'
         rows.get()[0].getString('status') == 'CREATED'
-        rows.get()[1].getString('topic') == 'CALLBACK'
-        rows.get()[1].getString('status') == 'SUCCEEDED'
+        rows.get()[0].getInteger('retry') == 2
+        // 重试次数超过
+        rows.get()[1].getString('topic') == 'SMS'
+        rows.get()[1].getString('status') == 'PROCESSING'
+        rows.get()[1].getInteger('retry') == 3
+        // 任务太近
+        rows.get()[2].getString('topic') == 'SMS'
+        rows.get()[2].getString('status') == 'PROCESSING'
+        rows.get()[2].getInteger('retry') == 0
+        // 已完成任务
+        rows.get()[3].getString('topic') == 'CALLBACK'
+        rows.get()[3].getString('status') == 'SUCCEEDED'
+        rows.get()[3].getInteger('retry') == 0
     }
 
     void 'setJobProcessing应该正确'() {

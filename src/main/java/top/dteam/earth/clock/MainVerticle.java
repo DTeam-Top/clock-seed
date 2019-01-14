@@ -1,32 +1,25 @@
 package top.dteam.earth.clock;
 
 import io.vertx.core.AbstractVerticle;
-import top.dteam.earth.clock.job.JobHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.dteam.earth.clock.job.JobSchedulerVerticle;
-import top.dteam.earth.clock.job.handler.CallbackJobHandler;
-import top.dteam.earth.clock.job.handler.SmsJobHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MainVerticle extends AbstractVerticle {
 
-    public static Map<String, JobHandler> jobHandlers;
+    private final static Logger logger = LoggerFactory.getLogger(MainVerticle.class);
 
     @Override
     public void start() {
-        initTopicHandlers();
         deploySubVerticles();
     }
 
-    private void initTopicHandlers() {
-        jobHandlers = new HashMap<>();
-        jobHandlers.put("SMS", new SmsJobHandler(vertx));
-        jobHandlers.put("CALLBACK", new CallbackJobHandler(vertx));
-    }
-
     private void deploySubVerticles() {
-        vertx.deployVerticle(new JobSchedulerVerticle());
+        vertx.deployVerticle(new JobSchedulerVerticle(), ar -> {
+            if (ar.succeeded()) {
+                logger.info("Job Scheduler Verticle started ...");
+            }
+        });
     }
 
 }

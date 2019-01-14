@@ -2,6 +2,10 @@ package top.dteam.earth.clock.config
 
 import groovy.transform.PackageScope
 import io.reactiverse.pgclient.PgPoolOptions
+import io.vertx.core.Vertx
+import top.dteam.earth.clock.job.JobHandler
+import top.dteam.earth.clock.job.handler.CallbackJobHandler
+import top.dteam.earth.clock.job.handler.SmsJobHandler
 
 class ClockConfiguration {
 
@@ -23,7 +27,13 @@ class ClockConfiguration {
     int limit = 100
 
     @PackageScope
+    int timeout = 4
+
+    @PackageScope
     Map<String, Map> topics
+
+    @PackageScope
+    Map<String, JobHandler> jobHandlers = [:]
 
     static void load(String file = System.getProperty('conf')) {
         String config
@@ -55,6 +65,10 @@ class ClockConfiguration {
         limit
     }
 
+    int timeout() {
+        timeout
+    }
+
     String callbackRoot() {
         callbackRoot
     }
@@ -73,6 +87,14 @@ class ClockConfiguration {
 
     int minDelayByTopic() {
         Long.min(topics?.values()?.min({ it.delay ?: Long.MAX_VALUE })?.delay ?: Long.MAX_VALUE, delay)
+    }
+
+    void registryHandler(String topic, JobHandler jobHandler) {
+        jobHandlers[topic] = jobHandler
+    }
+
+    JobHandler jobHandlers(String topic) {
+        jobHandlers[topic]
     }
 
 }

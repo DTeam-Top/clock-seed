@@ -6,7 +6,6 @@ import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Row;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.JsonObject;
-import top.dteam.earth.clock.MainVerticle;
 import top.dteam.earth.clock.NamedQuery;
 import top.dteam.earth.clock.config.ClockConfiguration;
 import top.dteam.earth.clock.utils.PgUtils;
@@ -46,7 +45,8 @@ public class JobSchedulerVerticle extends AbstractVerticle {
     }
 
     private void resetUnfinishedJobs(long tid) {
-        pgUtils.execute(NamedQuery.resetUnfinishedJob());
+        pgUtils.execute(NamedQuery.resetUnfinishedJob(configuration.timeout()));
+        vertx.cancelTimer(tid);
     }
 
     private void processJobs(PgRowSet rowSet) {
@@ -61,18 +61,14 @@ public class JobSchedulerVerticle extends AbstractVerticle {
         String topic = row.getString("topic");
         boolean hasCallback = ((JsonObject) row.getJson("body")).containsKey("callback");
         vertx.setTimer(configuration.delayByTopic(topic), tid -> {
-            MainVerticle.jobHandlers.get(topic).handle(row);
+            configuration.jobHandlers(topic).handle(row);
             vertx.cancelTimer(tid);
         });
         return hasCallback;
     }
 
     private void pollNext(boolean sleepForaWhile) {
-        if (sleepForaWhile) {
-            vertx.setTimer(SLEEP_FOR_A_WHILE, this::pollJobs);
-        } else {
-            vertx.setTimer(minDelay * 2, this::pollJobs);
-        }
+        vertx.setTimer(sleepForaWhile ? SLEEP_FOR_A_WHILE : minDelay * 2, this::pollJobs);
     }
 
 }

@@ -15,11 +15,17 @@ class NamedQuery {
     }
 
     /**
-     * 将处理中且未到最大重试次数的任务重置为CREATED
+     * 将处理中且未到最大重试次数，同时满足超时限制的任务重置为CREATED
      * @return
      */
-    static String resetUnfinishedJob() {
-        "update myjob set status = 'CREATED' where status = 'PROCESSING' and retry <= 3"
+    static String resetUnfinishedJob(int timeout) {
+        """
+            update myjob 
+            set status = 'CREATED', retry = retry + 1
+            where status = 'PROCESSING'
+                and retry < 3
+                and date_created <= (now() - interval '${timeout} hours')
+        """
     }
 
     /**

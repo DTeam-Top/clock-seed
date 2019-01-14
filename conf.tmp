@@ -7,9 +7,11 @@ pgPool {
     maxSize = 5
     cachePreparedStatements = true
 }
+
 retry = 3
 delay = 500
 limit = 100
+timeout = 8
 callbackRoot = 'http://localhost:8080'
 
 topics {
