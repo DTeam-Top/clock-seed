@@ -115,8 +115,7 @@ public class PgUtils {
         Json body = row.getJson("body");
         if (body != null) {
             JsonObject value = (JsonObject) body.value();
-            // callback job 同时包含 callback 和 source
-            hasCallback = !value.containsKey("source") && value.containsKey("callback");
+            hasCallback = !"CALLBACK".equalsIgnoreCase(row.getString("topic")) && value.containsKey("callback");
         }
         return hasCallback;
     }
