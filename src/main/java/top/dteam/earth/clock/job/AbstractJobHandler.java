@@ -5,6 +5,8 @@ import io.reactiverse.pgclient.data.Json;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.dteam.earth.clock.NamedQuery;
 import top.dteam.earth.clock.config.ClockConfiguration;
 import top.dteam.earth.clock.utils.PgUtils;
@@ -12,6 +14,8 @@ import top.dteam.earth.clock.utils.PgUtils;
 import java.util.function.BiConsumer;
 
 public abstract class AbstractJobHandler implements JobHandler {
+
+    private final static Logger logger = LoggerFactory.getLogger(AbstractJobHandler.class);
 
     protected Vertx vertx;
     protected PgUtils pgUtils;
@@ -27,7 +31,8 @@ public abstract class AbstractJobHandler implements JobHandler {
 
     @Override
     public void handle(Row row) {
-        pgUtils.execute(NamedQuery.setJobProcessing(), Tuple.of(row.getLong("id")));
+        logger.info("Processing a job: {}", row.getLong("id"));
+
         process(row, this::succeed, this::fail);
     }
 
@@ -39,10 +44,29 @@ public abstract class AbstractJobHandler implements JobHandler {
     private void succeed(Row row, JsonObject result) {
         pgPool.begin(res -> {
             if (res.succeeded()) {
+                logger.info("Handle a job({}) successfully, saving result({})", row.getLong("id"), result);
+
                 PgTransaction tx = res.result();
-                tx.preparedQuery(NamedQuery.completeJob(), Tuple.of(Json.create(result), "SUCCEEDED", row.getLong("id")), this::voidHandler);
-                tx.preparedQuery(NamedQuery.insertCallbackJob(), Tuple.of(Json.create(result)), this::voidHandler);
-                tx.commit();
+
+                // 记录结果
+                tx.query(NamedQuery.completeJob(result, "SUCCEEDED", row.getLong("id")), this::voidHandler);
+                // 若需要回调，创建回调任务
+                if (PgUtils.hasCallback(row)) {
+                    tx.query(NamedQuery.insertCallbackJob(new JsonObject()
+                                    .put("source", row.getLong("id"))
+                                    .put("callback", ((JsonObject) row.getJson("body").value()).getString("callback"))
+                                    .put("result", result))
+                            , this::voidHandler);
+                }
+                tx.commit(ar -> {
+                    if (ar.succeeded()) {
+                        logger.info("Job({}) result({}) saved.", row.getLong("id"), result);
+                    } else {
+                        logger.info("Job({}) result failed, cause: {}", row.getLong("id"), ar.cause());
+                    }
+                });
+            } else {
+                logger.error("Tx for job({}) can not begin, cause: {}", row.getLong("id"), res.cause());
             }
         });
     }
@@ -54,12 +78,14 @@ public abstract class AbstractJobHandler implements JobHandler {
         if ((retry + 1) <= retryOfTopic) {
             pgUtils.execute(NamedQuery.retryJobNextTime(), Tuple.of(row.getLong("id")));
         } else {
-            pgUtils.execute(NamedQuery.completeJob(), Tuple.of(error, "FAILED", row.getLong("id")));
+            pgUtils.execute(NamedQuery.completeJob(), Tuple.of(Json.create(error), "FAILED", row.getLong("id")));
         }
     }
 
-    private void voidHandler(AsyncResult<PgRowSet> rowSet) {
-
+    private void voidHandler(AsyncResult<PgRowSet> result) {
+        if (result.failed()) {
+            logger.error("Sql execution failed, cause: {}", result.cause());
+        }
     }
 
 }

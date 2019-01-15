@@ -101,8 +101,8 @@ class NamedQuerySpec extends Specification {
                 pgPool.preparedBatch(''' insert into myjob 
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
-                        Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 1, LocalDateTime.now().minusHours(5), LocalDateTime.now())
-                        , Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 3, LocalDateTime.now().minusHours(5), LocalDateTime.now())
+                        Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 1, LocalDateTime.now(), LocalDateTime.now().minusHours(5))
+                        , Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 3, LocalDateTime.now(), LocalDateTime.now().minusHours(5))
                         , Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 0, LocalDateTime.now(), LocalDateTime.now())
                         , Tuple.of('CALLBACK', 10, Json.create(new JsonObject()), 'SUCCEEDED', 0, LocalDateTime.now(), LocalDateTime.now())
                 ]) { ar -> println ar.cause() }

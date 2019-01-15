@@ -1,6 +1,7 @@
 package top.dteam.earth.clock
 
 import groovy.transform.CompileStatic
+import io.vertx.core.json.JsonObject
 
 @CompileStatic
 class NamedQuery {
@@ -24,7 +25,7 @@ class NamedQuery {
             set status = 'CREATED', retry = retry + 1
             where status = 'PROCESSING'
                 and retry < 3
-                and date_created <= (now() - interval '${timeout} hours')
+                and last_updated <= (now() - interval '${timeout} hours')
         """
     }
 
@@ -33,7 +34,7 @@ class NamedQuery {
      * @return
      */
     static String setJobProcessing() {
-        "update myjob set status = 'PROCESSING' where id = \$1"
+        "update myjob set status = 'PROCESSING', last_updated = now() where id = \$1"
     }
 
     /**
@@ -48,6 +49,16 @@ class NamedQuery {
             , last_updated = now()
           where id = $3
         '''
+    }
+
+    static String completeJob(JsonObject result, String status, long id) {
+        """
+          update myjob
+          set result = '${result.toString()}'::jsonb
+            , status = '${status}'
+            , last_updated = now()
+          where id = ${id}
+        """
     }
 
     /**
@@ -73,6 +84,13 @@ class NamedQuery {
           insert into myjob (topic, priority, body, status, retry, date_created, last_updated)
             values ('CALLBACK', 10, $1, 'CREATED', 0, now(), now())
         '''
+    }
+
+    static String insertCallbackJob(JsonObject body) {
+        """
+          insert into myjob (topic, priority, body, status, retry, date_created, last_updated)
+            values ('CALLBACK', 10, '${body.toString()}'::jsonb, 'CREATED', 0, now(), now())
+        """
     }
 
 }

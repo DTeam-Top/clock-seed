@@ -89,6 +89,32 @@ class ClockConfigurationSpec extends Specification {
         clockConfiguration.callbackRoot == 'http://localhost:8080'
     }
 
+    def "对于retry、delay，若没有topics配置，则用全局配置。"() {
+        setup:
+        String config = """
+            pgPool {
+                host = System.getenv("JDBC_HOST") ?: '127.0.0.1'
+                port = System.getenv("JDBC_PORT") ? System.getenv("JDBC_PORT") as int : 5432
+                database = System.getenv("JDBC_DATABASE") ?: 'earth'
+                user = System.getenv("JDBC_USER") ?: 'earth_admin'
+                password = System.getenv("JDBC_PASSWORD") ?: 'admin'
+                maxSize = 5
+                cachePreparedStatements = true
+            }
+            retry = 4
+            delay = 600
+            limit = 200
+            callbackRoot = 'http://localhost:8081'
+        """
+
+        when:
+        ClockConfiguration clockConfiguration = ClockConfiguration.build(config)
+
+        then:
+        clockConfiguration.retryByTopic('topic1') == 4
+        clockConfiguration.delayByTopic('topic1') == 600
+    }
+
     def "对于retry、delay，topic中的同名配置优先。"() {
         setup:
         String config = """
@@ -150,6 +176,8 @@ class ClockConfigurationSpec extends Specification {
         then:
         clockConfiguration.retryByTopic('topic1') == 10
         clockConfiguration.delayByTopic('topic1') == 600
+        clockConfiguration.retryByTopic('topic2') == 4
+        clockConfiguration.delayByTopic('topic2') == 600
     }
 
     def "应该能够找出最小的topic delay值：没有topic且没有配置delay，则为缺省值"() {

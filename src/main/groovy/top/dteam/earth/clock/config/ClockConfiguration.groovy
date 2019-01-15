@@ -2,10 +2,7 @@ package top.dteam.earth.clock.config
 
 import groovy.transform.PackageScope
 import io.reactiverse.pgclient.PgPoolOptions
-import io.vertx.core.Vertx
 import top.dteam.earth.clock.job.JobHandler
-import top.dteam.earth.clock.job.handler.CallbackJobHandler
-import top.dteam.earth.clock.job.handler.SmsJobHandler
 
 class ClockConfiguration {
 
@@ -74,11 +71,11 @@ class ClockConfiguration {
     }
 
     long delayByTopic(String topic) {
-        topics[topic]?.delay ?: delay
+        topics?."${topic}"?.delay ?: delay
     }
 
     int retryByTopic(String topic) {
-        topics[topic]?.retry ?: retry
+        topics?."${topic}"?.retry ?: retry
     }
 
     Map topicConfig(String topic) {

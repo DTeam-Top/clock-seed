@@ -1,10 +1,9 @@
 package top.dteam.earth.clock.utils;
 
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgRowSet;
-import io.reactiverse.pgclient.PgTransaction;
-import io.reactiverse.pgclient.Tuple;
+import io.reactiverse.pgclient.*;
+import io.reactiverse.pgclient.data.Json;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,5 +108,16 @@ public class PgUtils {
                 });
             }
         });
+    }
+
+    public static boolean hasCallback(Row row) {
+        boolean hasCallback = false;
+        Json body = row.getJson("body");
+        if (body != null) {
+            JsonObject value = (JsonObject) body.value();
+            // callback job 同时包含 callback 和 source
+            hasCallback = !value.containsKey("source") && value.containsKey("callback");
+        }
+        return hasCallback;
     }
 }
