@@ -55,7 +55,7 @@ class NamedQuerySpec extends Specification {
                     , last_updated timestamp not null
                     , primary key (id));
                 ''') {
-                pgPool.preparedBatch(''' insert into myjob 
+                pgPool.preparedBatch(''' insert into myjob
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
                         Tuple.of('SMS', 5, Json.create(new JsonObject()), 'SUCCEEDED', 0, LocalDateTime.now().minusMinutes(15), LocalDateTime.now())
@@ -110,7 +110,7 @@ class NamedQuerySpec extends Specification {
         }
 
         when:
-        sleep(100)
+        sleep(300)
         BlockingVariable<List<Row>> rows = new BlockingVariable<>()
         pgUtils.simpleSql(NamedQuery.resetUnfinishedJob(4)) {
             pgUtils.simpleSql('select * from myjob order by id') { rowSet ->
@@ -153,7 +153,7 @@ class NamedQuerySpec extends Specification {
                     , last_updated timestamp not null
                     , primary key (id));
                 ''') {
-                pgPool.preparedBatch(''' insert into myjob 
+                pgPool.preparedBatch(''' insert into myjob
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
                         Tuple.of('SMS', 5, Json.create(new JsonObject()), 'CREATED', 1, LocalDateTime.now().minusMinutes(10), LocalDateTime.now())
@@ -190,7 +190,7 @@ class NamedQuerySpec extends Specification {
                     , last_updated timestamp not null
                     , primary key (id));
                 ''') {
-                pgPool.preparedBatch(''' insert into myjob 
+                pgPool.preparedBatch(''' insert into myjob
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
                         Tuple.of('SMS', 5, Json.create(new JsonObject()), 'CREATED', 1, LocalDateTime.now().minusMinutes(10), LocalDateTime.now())
@@ -228,7 +228,7 @@ class NamedQuerySpec extends Specification {
                     , last_updated timestamp not null
                     , primary key (id));
                 ''') {
-                pgPool.preparedBatch(''' insert into myjob 
+                pgPool.preparedBatch(''' insert into myjob
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
                         Tuple.of('SMS', 5, Json.create(new JsonObject()), 'PROCESSING', 1, LocalDateTime.now().minusMinutes(10), LocalDateTime.now())
@@ -266,7 +266,7 @@ class NamedQuerySpec extends Specification {
                     , last_updated timestamp not null
                     , primary key (id));
                 ''') {
-                pgPool.preparedBatch(''' insert into myjob 
+                pgPool.preparedBatch(''' insert into myjob
                     (topic, priority, body, status, retry, date_created, last_updated)
                     values($1, $2, $3, $4, $5, $6, $7)'''.stripIndent(), [
                         Tuple.of('SMS', 5, Json.create(new JsonObject()), 'SUCCEEDED', 1, LocalDateTime.now().minusMinutes(10), LocalDateTime.now())
