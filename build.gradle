@@ -5,12 +5,16 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
+        classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.7.1"
     }
 }
 
 apply plugin: 'groovy'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'codenarc'
+apply plugin: 'pmd'
+apply plugin: "com.github.spotbugs"
 
 if (!JavaVersion.current().java8Compatible) {
     throw new IllegalStateException('''Please install Java 8!'''.stripMargin())
@@ -33,6 +37,8 @@ dependencies {
     testCompile "org.spockframework:spock-core:${SPOCK_VER}"
     testRuntime 'cglib:cglib-nodep:3.2.8'
     testRuntime 'org.objenesis:objenesis:3.0'
+
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.9.0'
 }
 
 version = '0.0.1'
@@ -46,5 +52,33 @@ shadowJar {
     }
     mergeServiceFiles {
         include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+}
+
+codenarc {
+    toolVersion = '1.3'
+    configFile = file('config/codenarc/rules.groovy')
+}
+
+pmd {
+    toolVersion = '6.14.0'
+    ruleSetFiles = files('config/pmd/rules.xml')
+    ruleSets = []
+}
+
+spotbugs {
+    toolVersion = '3.1.12'
+    effort = "max"
+    excludeFilter = file('config/spotbugs/spotbugs-exclude.xml')
+}
+
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+    reports {
+        html {
+            enabled = true
+        }
+        xml {
+            enabled = false
+        }
     }
 }

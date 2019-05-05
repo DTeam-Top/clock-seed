@@ -32,7 +32,7 @@ class NamedQuerySpec extends Specification {
             }
         """
         ClockConfiguration clockConfiguration = ClockConfiguration.build(config)
-        pgPool = PgClient.pool(clockConfiguration.pgPool())
+        pgPool = PgClient.pool(clockConfiguration.pgPool)
     }
 
     void cleanupSpec() {
@@ -67,7 +67,7 @@ class NamedQuerySpec extends Specification {
         }
 
         when:
-        sleep(300)
+        sleep(1000)
         BlockingVariable<List<Row>> rows = new BlockingVariable<>()
         BlockingVariable<Integer> rowCount = new BlockingVariable<>()
         pgUtils.simpleSql(NamedQuery.unprocessedJob(10)) { rowSet ->

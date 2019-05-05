@@ -39,7 +39,7 @@ class JobSchedulerVerticleSpec extends Specification {
 
         vertx = Vertx.vertx()
         ClockConfiguration.instance = ClockConfiguration.build(config)
-        pgPool = PgClient.pool(ClockConfiguration.instance.pgPool())
+        pgPool = PgClient.pool(ClockConfiguration.instance.pgPool)
     }
 
     void cleanupSpec() {

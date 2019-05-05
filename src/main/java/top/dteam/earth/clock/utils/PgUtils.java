@@ -2,6 +2,7 @@ package top.dteam.earth.clock.utils;
 
 import io.reactiverse.pgclient.*;
 import io.reactiverse.pgclient.data.Json;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -14,14 +15,14 @@ public class PgUtils {
 
     private final static Logger logger = LoggerFactory.getLogger(PgUtils.class);
 
-    private PgPool pgPool;
+    private transient final PgPool pgPool;
 
     public PgUtils(PgPool pgPool) {
         this.pgPool = pgPool;
     }
 
     public void simpleSql(String sql, Handler<PgRowSet> resolve, Handler<Throwable> reject) {
-        pgPool.query(sql, ar -> {
+        pgPool.query(sql, (AsyncResult<PgRowSet> ar) -> {
             if (ar.succeeded()) {
                 resolve.handle(ar.result());
             } else {
@@ -35,7 +36,7 @@ public class PgUtils {
     }
 
     public void preparedSql(String sql, Tuple arguments, Handler<PgRowSet> resolve, Handler<Throwable> reject) {
-        pgPool.preparedQuery(sql, arguments, ar -> {
+        pgPool.preparedQuery(sql, arguments, (AsyncResult<PgRowSet> ar) -> {
             if (ar.succeeded()) {
                 resolve.handle(ar.result());
             } else {
@@ -50,7 +51,7 @@ public class PgUtils {
 
 
     public void execute(String sql) {
-        pgPool.query(sql, ar -> {
+        pgPool.query(sql, (AsyncResult<PgRowSet> ar) -> {
             if (ar.succeeded()) {
                 logger.debug("SQL ({}) succeeded.", sql);
             } else {
@@ -60,7 +61,7 @@ public class PgUtils {
     }
 
     public void execute(String sql, Tuple arguments) {
-        pgPool.preparedQuery(sql, arguments, ar -> {
+        pgPool.preparedQuery(sql, arguments, (AsyncResult<PgRowSet> ar) -> {
             if (ar.succeeded()) {
                 logger.debug("SQL ({}) with arguments ({}) succeeded.", sql, arguments);
             } else {
@@ -75,7 +76,7 @@ public class PgUtils {
      * @param sqls，可以为String和Map.Entry。若为后者，key为语句（String），value为参数（Tuple）
      */
     public void batch(List sqls) {
-        pgPool.begin(res -> {
+        pgPool.begin((AsyncResult<PgTransaction> res) -> {
             if (res.succeeded()) {
                 PgTransaction tx = res.result();
                 for (Object sql : sqls) {
@@ -98,7 +99,7 @@ public class PgUtils {
                     }
                 }
 
-                tx.commit(ar -> {
+                tx.commit((AsyncResult<Void> ar) -> {
                     if (ar.succeeded()) {
                         logger.info("Transaction succeeded");
                     } else {

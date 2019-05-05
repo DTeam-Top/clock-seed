@@ -1,6 +1,7 @@
 package top.dteam.earth.clock;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.dteam.earth.clock.job.JobSchedulerVerticle;
@@ -15,7 +16,7 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     private void deploySubVerticles() {
-        vertx.deployVerticle(new JobSchedulerVerticle(), ar -> {
+        vertx.deployVerticle(new JobSchedulerVerticle(), (AsyncResult<String> ar) -> {
             if (ar.succeeded()) {
                 logger.info("Job Scheduler Verticle started ...");
             }

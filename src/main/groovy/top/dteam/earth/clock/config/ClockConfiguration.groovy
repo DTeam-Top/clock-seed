@@ -54,19 +54,19 @@ class ClockConfiguration {
         configuration
     }
 
-    PgPoolOptions pgPool() {
+    PgPoolOptions getPgPool() {
         pgPool
     }
 
-    int limit() {
+    int getLimit() {
         limit
     }
 
-    int timeout() {
+    int getTimeout() {
         timeout
     }
 
-    String callbackRoot() {
+    String getCallbackRoot() {
         callbackRoot
     }
 
@@ -78,7 +78,7 @@ class ClockConfiguration {
         topics?."${topic}"?.retry ?: retry
     }
 
-    Map topicConfig(String topic) {
+    Map<String, ?> topicConfig(String topic) {
         Collections.unmodifiableMap(topics[topic])
     }
 
@@ -90,7 +90,7 @@ class ClockConfiguration {
         jobHandlers[topic] = jobHandler
     }
 
-    JobHandler jobHandlers(String topic) {
+    JobHandler getJobHandler(String topic) {
         jobHandlers[topic]
     }
 
