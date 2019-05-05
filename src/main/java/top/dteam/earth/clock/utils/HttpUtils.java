@@ -2,6 +2,7 @@ package top.dteam.earth.clock.utils;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientResponse;
@@ -38,15 +39,15 @@ public class HttpUtils {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 responseConsumer(response, handler);
             } else {
-                responseConsumer(response,
-                        result -> logger.error("request failed, status: {}, body: {}", response.statusCode(), result));
-
+                responseConsumer(response, (JsonObject result) -> {
+                    logger.error("request failed, status: {}, body: {}", response.statusCode(), result);
+                });
             }
         };
     }
 
     public static void responseConsumer(HttpClientResponse response, Handler<JsonObject> handler) {
-        response.bodyHandler(totalBuffer -> {
+        response.bodyHandler((Buffer totalBuffer) -> {
             if (totalBuffer.length() > 0) {
                 handler.handle(totalBuffer.toJsonObject());
             } else {

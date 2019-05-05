@@ -9,19 +9,21 @@ class NamedQuery {
     /**
      * 高优先级、创建时间最长的未处理任务
      * @param limit
-     * @return
+     * @return 未处理任务的SQL
      */
     static String unprocessedJob(int limit) {
-        "select id, topic, body, retry from myjob where status = 'CREATED' order by priority desc, date_created asc limit ${limit}"
+        "select id, topic, body, retry from myjob where status = 'CREATED' " +
+                "order by priority desc, date_created asc limit ${limit}"
     }
 
     /**
      * 将处理中且未到最大重试次数，同时满足超时限制的任务重置为CREATED
-     * @return
+     * @param timeout 超时时间，单位小时
+     * @return 未完成任务的SQL
      */
     static String resetUnfinishedJob(int timeout) {
         """
-            update myjob 
+            update myjob
             set status = 'CREATED', retry = retry + 1
             where status = 'PROCESSING'
                 and retry < 3
@@ -31,7 +33,7 @@ class NamedQuery {
 
     /**
      * 设置任务处理标志位
-     * @return
+     * @return 设置任务处理标志位的SQL
      */
     static String setJobProcessing() {
         "update myjob set status = 'PROCESSING', last_updated = now() where id = \$1"
@@ -39,7 +41,7 @@ class NamedQuery {
 
     /**
      * 完成任务，将结果（成功：结果，失败：原因）、状态、最后更新时间写入
-     * @return
+     * @return 完成任务处理的SQL
      */
     static String completeJob() {
         '''
@@ -63,7 +65,7 @@ class NamedQuery {
 
     /**
      * 记录重试次数并复位任务状态位
-     * @return
+     * @return 记录重试次数并复位任务状态位的SQL
      */
     static String retryJobNextTime() {
         '''
@@ -77,7 +79,7 @@ class NamedQuery {
 
     /**
      * 插入回调任务
-     * @return
+     * @return SQL
      */
     static String insertCallbackJob() {
         '''

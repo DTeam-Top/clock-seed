@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 
 public class SimpleLoggerRejector implements Handler<Throwable> {
 
-    private Logger logger;
+    private transient final Logger logger;
 
     public SimpleLoggerRejector(Logger logger) {
         this.logger = logger;

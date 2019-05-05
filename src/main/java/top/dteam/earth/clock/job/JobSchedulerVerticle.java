@@ -15,11 +15,11 @@ public class JobSchedulerVerticle extends AbstractVerticle {
     static long DELAY = 10000;
     static long SLEEP_FOR_A_WHILE = 60000;
     static long INTERVAL = 60000;
-    long minDelay = 0;
+    private transient long minDelay;
 
-    PgPool pgPool;
-    PgUtils pgUtils;
-    ClockConfiguration configuration;
+    private transient PgPool pgPool;
+    private transient PgUtils pgUtils;
+    private transient ClockConfiguration configuration;
 
     @Override
     public void start() {
@@ -27,7 +27,7 @@ public class JobSchedulerVerticle extends AbstractVerticle {
 
         configuration = ClockConfiguration.getInstance();
         minDelay = configuration.minDelayByTopic();
-        pgPool = PgClient.pool(vertx, configuration.pgPool());
+        pgPool = PgClient.pool(vertx, configuration.getPgPool());
         pgUtils = new PgUtils(pgPool);
 
         vertx.setTimer(DELAY, this::pollJobs);
@@ -46,14 +46,14 @@ public class JobSchedulerVerticle extends AbstractVerticle {
     private void pollJobs(long tid) {
         logger.info("Polling unprocessedJob ...");
 
-        pgUtils.simpleSql(NamedQuery.unprocessedJob(configuration.limit()), this::processJobs);
+        pgUtils.simpleSql(NamedQuery.unprocessedJob(configuration.getLimit()), this::processJobs);
         vertx.cancelTimer(tid);
     }
 
     private void resetUnfinishedJobs(long tid) {
         logger.info("Resetting unfinishedJob ...");
 
-        pgUtils.execute(NamedQuery.resetUnfinishedJob(configuration.timeout()));
+        pgUtils.execute(NamedQuery.resetUnfinishedJob(configuration.getTimeout()));
         vertx.cancelTimer(tid);
     }
 
@@ -65,15 +65,15 @@ public class JobSchedulerVerticle extends AbstractVerticle {
             pgUtils.execute(NamedQuery.setJobProcessing(), Tuple.of(row.getLong("id")));
             hasCallback = startJob(row) || hasCallback;
         }
-        pollNext(rowSet.rowCount() < configuration.limit() && !hasCallback);
+        pollNext(rowSet.rowCount() < configuration.getLimit() && !hasCallback);
     }
 
     private boolean startJob(Row row) {
         String topic = row.getString("topic");
-        vertx.setTimer(configuration.delayByTopic(topic), tid -> {
+        vertx.setTimer(configuration.delayByTopic(topic), (Long tid) -> {
             logger.info("Starting a job: {}", row.getLong("id"));
 
-            configuration.jobHandlers(topic).handle(row);
+            configuration.getJobHandler(topic).handle(row);
             vertx.cancelTimer(tid);
         });
         return PgUtils.hasCallback(row);

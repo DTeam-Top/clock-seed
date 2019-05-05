@@ -17,15 +17,15 @@ public abstract class AbstractJobHandler implements JobHandler {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractJobHandler.class);
 
-    protected Vertx vertx;
-    protected PgUtils pgUtils;
-    protected PgPool pgPool;
-    protected ClockConfiguration configuration;
+    protected transient final Vertx vertx;
+    private transient final PgUtils pgUtils;
+    private transient final PgPool pgPool;
+    protected transient final ClockConfiguration configuration;
 
     public AbstractJobHandler(Vertx vertx) {
         this.vertx = vertx;
         this.configuration = ClockConfiguration.getInstance();
-        pgPool = PgClient.pool(vertx, configuration.pgPool());
+        pgPool = PgClient.pool(vertx, configuration.getPgPool());
         this.pgUtils = new PgUtils(pgPool);
     }
 
@@ -42,7 +42,7 @@ public abstract class AbstractJobHandler implements JobHandler {
 
     // 更新结果并创建callback任务
     private void succeed(Row row, JsonObject result) {
-        pgPool.begin(res -> {
+        pgPool.begin((AsyncResult<PgTransaction> res) -> {
             if (res.succeeded()) {
                 logger.info("Handle a job({}) successfully, saving result({})", row.getLong("id"), result);
 
@@ -58,7 +58,7 @@ public abstract class AbstractJobHandler implements JobHandler {
                                     .put("result", result))
                             , this::voidHandler);
                 }
-                tx.commit(ar -> {
+                tx.commit((AsyncResult<Void> ar) -> {
                     if (ar.succeeded()) {
                         logger.info("Job({}) result({}) saved.", row.getLong("id"), result);
                     } else {

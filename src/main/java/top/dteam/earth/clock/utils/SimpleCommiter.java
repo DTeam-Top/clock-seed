@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 
 public class SimpleCommiter implements Handler<AsyncResult<PgRowSet>> {
 
-    private String errors;
-    private Logger logger;
-    private PgTransaction tx;
+    private transient final String errors;
+    private transient final Logger logger;
+    private transient final PgTransaction tx;
 
     public SimpleCommiter(String errors, Logger logger, PgTransaction tx) {
         this.errors = errors;
@@ -20,7 +20,7 @@ public class SimpleCommiter implements Handler<AsyncResult<PgRowSet>> {
 
     @Override
     public void handle(AsyncResult<PgRowSet> asyncResult) {
-        tx.commit(ar -> {
+        tx.commit((AsyncResult<Void> ar) -> {
             if (ar.succeeded()) {
                 logger.info("Transaction succeeded");
             } else {

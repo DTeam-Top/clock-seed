@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 
 public class CallbackJobHandler extends AbstractJobHandler {
 
-    HttpClient httpClient;
+    private transient final HttpClient httpClient;
 
     public CallbackJobHandler(Vertx vertx) {
         super(vertx);
@@ -22,7 +22,7 @@ public class CallbackJobHandler extends AbstractJobHandler {
     protected void process(Row row, BiConsumer<Row, JsonObject> successHandler, BiConsumer<Row, JsonObject> failureHandler) {
         JsonObject result = ((JsonObject) row.getJson("body").value()).getJsonObject("result");
         String callback = result.getString("callback");
-        httpClient.postAbs(configuration.callbackRoot() + callback)
+        httpClient.postAbs(configuration.getCallbackRoot() + callback)
                 .setChunked(true)
                 .putHeader("content-type", "application/json")
                 .handler(HttpUtils.successHandler(res -> successHandler.accept(row, new JsonObject().put("success", true))))

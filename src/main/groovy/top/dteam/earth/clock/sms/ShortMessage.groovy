@@ -24,11 +24,11 @@ class ShortMessage {
 
     String toString() {
         new JsonObject()
-                .put("phones", new JsonArray(phones))
-                .put("templateCode", templateCode)
-                .put("templateParam", templateParam.toString())
-                .put("freeSignName", freeSignName)
-                .put("message", message).toString()
+                .put('phones', new JsonArray(phones))
+                .put('templateCode', templateCode)
+                .put('templateParam', templateParam.toString())
+                .put('freeSignName', freeSignName)
+                .put('message', message).toString()
     }
 
 }
