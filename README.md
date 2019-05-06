@@ -131,3 +131,15 @@ topics {
 - limit：100
 - timeout：4 hour
 - callbackRoot：http://localhost:8080
+
+## 代码贡献
+
+本项目使用`codenarc`,`pmd`,`spotbugs`检查项目代码规范，相关的规则配置存储于`config/`目录下，提交代码前使用
+
+```bash
+gradle codenarcMain pmdMain spotbugsMain
+```
+
+执行代码规范检查，并且确保`gradle test`通过测试。
+
+TODO: 找一个好用的git hook插件，可以在提交代码前自动运行代码规范检查
